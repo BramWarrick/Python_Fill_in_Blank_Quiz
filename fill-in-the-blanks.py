@@ -35,27 +35,42 @@ tuple, and ___4___ or can be more complicated such as objects and lambda functio
 
 # If you need help, you can sign up for a 1 on 1 coaching appointment: https://calendly.com/ipnd1-1/20min/
 difficulty_levels = ['easy','medium','hard','custom','random']
-difficulty_default = list_of_levels[0]
+difficulty_default = difficulty_levels[0]
 missed_answer_range = [3, 4, 5, 6]
-missed_answer_default = missed_answers_range[0]
+missed_answer_default = missed_answer_range[0]
 
-def display_prompt(user_prompt, possible_answers, default_answer,max_failed_attempts, type):
+def display_prompt(user_prompt, possible_answers, default_answer,max_failed_attempts, var_type, show_possible_answers):
 	#	Standardized prompt; after maximum allowed attempts, assign default/correct value
 	# user_prompt is a string alerting the user to the desired input
 	# possible_answers is always a list of values of any length; used to determine if answer is appropriate or correct
 	# default_answer is a string used after the maximum failed attempts are exceeded
 	# max_failed_attempts is an integer; once exceeded a default or correct answer will be used
-	# type is a string; allows user inputs to be sanitized to avoid errors
-	choices = ", ".join(possible_answers)
+	# var_type is a string; allows user inputs to be sanitized to avoid errors
+	# show_possible_answers is a boolean, allowing choices to be displayed where needed
 	failed_attempts = 0
 	result = ""
 	while result not in possible_answers and failed_attempts <= max_failed_attempts:
-		result = raw_input(user_prompt + "(" + choices + "): ")
-		result = result_norm(result, type)
+		prompt = build_prompt(user_prompt, choice_list, var_type, show_possible_answers)
+		result = raw_input(prompt)
+		result = result_norm(result, var_type)
 		failed_attempts += 1
 	if failed_attempts >= max_failed_attempts:
 		return default_answer
 	return result
+
+def build_choices(choice_list, var_type):
+	if var_type == "string":
+		choices = ", ".join(choice_list)
+	elif var_type == "int":
+		choices = str(min(choice_list)) + " - " + str(max(choice_list))
+	return choices
+
+def build_prompt(user_prompt, choice_list, var_type, show_possible_answers):
+	prompt = user_prompt
+	if show_possible_answers:
+		choices = build_choices(possible_answers, var_type)
+		prompt += "(" + choices + ")"
+	prompt += ": "
 
 def get_difficulty():
 	# Prompts user for desired difficulty
@@ -73,13 +88,13 @@ def get_max_missed_answers():
 		5,
 		"int" )
 
-def result_norm(result, type):
+def result_norm(result, var_type):
 	# Cleans user inputs for use in validations
 	# result is the value to be cleaned based on its /intended/ type
 	# type is the /intended/ type; rules follow based on necessary validations and substitutions
-	if type = "string":
+	if var_type == "string":
 		result = result.lower()
-	elif type = "int":
+	elif var_type == "int":
 		if type(result) != 'int':
 			result = -99
 	return result
@@ -88,6 +103,8 @@ def display_paragraph(quiz):
 	user_input = raw_input("\033[0;34mType in a value\033[0m")
 	print user_input
 
-#print difficulty_prompt10)
+#print get_difficulty()
 print range(1,10)
-print missed_answer_prompt()
+#print get_max_missed_answers()
+print build_choices(missed_answer_range,"int")
+print build_choices(difficulty_levels,"string")
