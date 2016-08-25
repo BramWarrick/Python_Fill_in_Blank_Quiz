@@ -218,10 +218,25 @@ def display_quiz_prompt(prompt_header, prompt_feedback, prompt_question, possibl
 	return replace_string, default_answer, prompt_feedback
 
 def reformat_max_line_length(text_string, max_line_length):
-	# Purpose: Takes the text_sting and reformats it to a maximum length
+	# Purpose: Takes the text_sting and breaks it on line breaks, then feeds it through a line resizer
 	# Assumption: It's okay if strings, if lacking a space, exceed the max_line_length
 	# Inputs:
 	#		text_string is the raw string to be reformatted with new lines (\n) added
+	#		max_line_length is maximum length of any displayed line within a human readable
+	# Output:
+	#		result is the text string, unchanged except for the addition of new lines, where appropriate
+	# ------------------------------------------------------------------
+	new_string = ""
+	text_line_list = text_string.split("\n")
+	for line in text_line_list:
+		new_string += reformat_line_max_line_length(line, max_line_length)
+	return new_string
+
+def reformat_line_max_line_length(text_string, max_line_length):
+	# Purpose: Takes the text_sting and reformats it to a maximum length
+	# Assumption: It's okay if strings, if lacking a space, exceed the max_line_length
+	# Inputs:
+	#		text_string is the raw string (line) to be reformatted with new lines (\n) added
 	#		max_line_length is maximum length of any displayed line within a human readable
 	# Output:
 	#		result is the text string, unchanged except for the addition of new lines, where appropriate
@@ -230,7 +245,7 @@ def reformat_max_line_length(text_string, max_line_length):
 	cut_value = temp_string.rfind(" ")
 	# If text_string has no spaces or is already of appropriate length, return text_string
 	if cut_value == -1 or len(text_string) <= max_line_length:
-		return text_string
+		return text_string + "\n"
 	else:
 		# Recursively iterate through text_string, building a human readable (the +1 is to move past the " ")
 		result = text_string[0:cut_value] + "\n" + reformat_max_line_length(text_string[cut_value + 1:],max_line_length)
@@ -318,13 +333,13 @@ def build_standard_question(prompt_feedback, prompt_question,  possible_answers,
 	return prompt
 
 def build_choice_string(possible_answers, var_type):
-# Purpose: Takes a list and formats it into a human readable, parenthetical
-# Inputs:
-#		possible_answers is list of all possible answers; for reformatting into string
-#		var_type is a string that tells the function how to respond. String is a full list; int is a numeric range.
-# Output:
-#		choice is the formatted listing of choices, based on desired format
-# ------------------------------------------------------------------
+	# Purpose: Takes a list and formats it into a human readable, parenthetical
+	# Inputs:
+	#		possible_answers is list of all possible answers; for reformatting into string
+	#		var_type is a string that tells the function how to respond. String is a full list; int is a numeric range.
+	# Output:
+	#		choice is the formatted listing of choices, based on desired format
+	# ------------------------------------------------------------------
 	if var_type == "string":
 		# Desired format is string, so make a full list of values
 		choices = ", ".join(possible_answers)
@@ -336,20 +351,20 @@ def build_choice_string(possible_answers, var_type):
 	return choices
 
 def build_quiz_question(prompt_header, prompt_feedback, prompt_question, answer_index):
-# Purpose: Takes the various elements for a quiz question and turns it into two strings:
-#		full_question and the substring to be highlighted.
-#		All sections are reformatted to reflect max_line_length (global variable)
-# Inputs:
-#		prompt_header is, in this context, the leading paragraph for a quiz question
-#		prompt_feedback is the feedback from the previous user entry
-#		prompt_question is the specific call to action
-#		answer_index guides the function in creating the replace_string - the area of concern for this quiz.
-#			The value created with this is also needed externally for substitutions.
-# Outputs:
-#		prompt is the full string to be displayed to the user in raw form
-#		replace_target is the string, found within prompt, that will need further action (highlighting, substitution)
-# ------------------------------------------------------------------
-	prompt = "\n"
+	# Purpose: Takes the various elements for a quiz question and turns it into two strings:
+	#		full_question and the substring to be highlighted.
+	#		All sections are reformatted to reflect max_line_length (global variable)
+	# Inputs:
+	#		prompt_header is, in this context, the leading paragraph for a quiz question
+	#		prompt_feedback is the feedback from the previous user entry
+	#		prompt_question is the specific call to action
+	#		answer_index guides the function in creating the replace_string - the area of concern for this quiz.
+	#			The value created with this is also needed externally for substitutions.
+	# Outputs:
+	#		prompt is the full string to be displayed to the user in raw form
+	#		replace_target is the string, found within prompt, that will need further action (highlighting, substitution)
+	# ------------------------------------------------------------------
+	prompt = ""
 	if len(prompt_header) > 0:
 		# prompt_header extists, so format it correctly for line length and vertical space
 		prompt += "\n" + reformat_max_line_length(prompt_header, max_line_length) + "\n"
@@ -376,7 +391,7 @@ def prompt_response_good(result, default_answer):
 	else:
 		# Approved, but not best answer was provided
 		response = "While this is an approved answer, a more accurate answer would be '" + str(default_answer) + ".'"
-		response = add_text_color(response, response, "red")
+		response = add_text_color(response, response, "green")
 	return response
 
 def prompt_feedback_after_wrong(failed_attempts, max_failed_attempts):
@@ -421,7 +436,7 @@ def prompt_feedback_after_max_attempts_quiz(max_failed_attempts, default_answer)
 	#		response is the feedback to be displayed to the user	
 	# ------------------------------------------------------------------
 	response = "You've reached the maximum number of attempts."
-	#response = add_text_color(response, response, "red")
+	response = add_text_color(response, response, "red")
 	response += "\nThe desired answer was '" + default_answer + ".'\n"
 	return response
 
@@ -475,6 +490,13 @@ def is_within_max_attempts(failed_attempts, max_failed_attempts):
 # print build_choice_string(['3','4','5'], "string")
 # print build_quiz_question("empty feedback", "", "Look okay", 3)
 # print display_quiz_prompt("this is a paragraph. No really, it is.", "number", ['3','4','5'], '5', 5,3)
-print main_sequence()
+main_sequence()
 # print get_difficulty(difficulty_levels)
 # print reformat_max_line_length(quizes["easy"]["prompt_header"], 60)
+
+# test =  "You've reached the maximum number of attempts.\n"
+# test += "The desired answer was 'function.'"
+# print build_quiz_question(quizes["easy"]["prompt_header"], test, "words are here, they're a question?", 1)
+# print reformat_max_line_length(test, 60)
+# print reformat_max_line_length(quizes["easy"]["prompt_header"], 60)
+# print "\n\nAll ____1____s follow in a specific format: def\n____1_____name(argument1, argument2,...). One ____1____ can\npass its results using the ____2____ command, where the\nformat is ____2____ value. As a rule you want a ____1____\nto have ____3____ purpose; additional purposes are ideally\nmoved into another ____1____. This helps reduce ____4____\nand prevent bugs. It also promotes readability.\n\n\nYou've reached the maximum number of attempts.\nThe desired answer was 'function.'\n\nwords are here, they're a question? ____2____?  "
